@@ -1,0 +1,11 @@
+.download {
+  // margin: 1em 0;
+  margin-top: auto; // push to the right
+
+  .p-button {
+    width: 100%; /* Optional: make buttons fill full width */
+    /* Remove box-shadow on selected (highlighted) button */
+    box-shadow: none;
+    outline: none;
+  }
+}

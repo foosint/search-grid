@@ -1,0 +1,34 @@
+.grid {
+  margin: 1em 0;
+  display: flex;
+  flex-direction: column;
+
+  .p-button {
+    width: 100%; /* Optional: make buttons fill full width */
+    margin-bottom: 10px;
+    font-size: 0.875rem;
+    padding: 0.65625rem 1.09375rem;
+    &.p-inputnumber-button {
+      width: auto;
+      padding: 0.5em;
+      margin-bottom: auto;
+    }
+    /* Remove box-shadow on selected (highlighted) button */
+    box-shadow: none;
+    outline: none;
+  }
+
+  .p-inputnumber {
+    margin-bottom: 10px;
+    .p-button {
+      width: auto;
+    }
+    .p-inputtext {
+      min-width: 1px;
+      padding: 0 0.5em;
+      /* Remove box-shadow on selected (highlighted) button */
+      box-shadow: none;
+      outline: none;
+    }
+  }
+}

@@ -1,0 +1,41 @@
+.select-mode {
+  margin: 0;
+
+  h3 {
+    margin: 10px 0;
+    font-size: 15px;
+  }
+
+  // button group
+  .p-selectbutton {
+    display: flex;
+    flex-direction: column; /* Stack options vertically */
+  }
+
+  // style of the buttons
+  .p-button {
+    width: 100%; /* Optional: make buttons fill full width */
+    font-size: 0.875rem;
+    padding: 0.65625rem 1.09375rem;
+    /* Remove box-shadow on selected (highlighted) button */
+    &.p-highlight {
+      box-shadow: none; /* Disable box-shadow */
+      outline: none; /* Optional: Remove any focus outlines */
+    }
+  }
+
+  .p-button-group {
+    .p-button:first-of-type {
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .p-button:last-of-type {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+  }
+}

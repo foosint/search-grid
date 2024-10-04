@@ -1,0 +1,20 @@
+/* Set the container to use Flexbox */
+.container {
+  display: flex;
+  flex-direction: column; /* Header on top, content below */
+  height: 100vh; /* Full viewport height */
+}
+
+/* Content area (sidebar and main) */
+.content {
+  display: flex;
+  flex: 1; /* Content area takes up remaining space */
+}
+
+/* Main content styles */
+.main {
+  background-color: #f4f4f4;
+  padding: 0;
+  flex: 1; /* Main area takes up remaining space */
+  overflow-y: auto; /* Scroll if content overflows */
+}

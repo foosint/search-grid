@@ -1,0 +1,26 @@
+/* Sidebar styles */
+.sidebar {
+  background-color: #444;
+  color: white;
+  padding: 1rem;
+  flex: 0 0 200px; /* Fixed width sidebar */
+  transition: width 0.3s ease; /* Smooth transition */
+  overflow: hidden; /* Hide content when collapsed */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sidebar.minimized {
+  flex: 0 0 60px; /* Minimized width */
+}
+
+/* Hide the sidebar content when minimized */
+.sidebar.minimized .sidebar-content {
+  display: none;
+}
