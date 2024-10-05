@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import * as L from 'leaflet';
 import * as turf from '@turf/turf';
-import { Position, Feature, Polygon } from 'geojson';
+import { Position, Feature, Polygon, GeoJsonProperties } from 'geojson';
 // primereact
 import { Button } from 'primereact/button';
 import { InputNumber } from 'primereact/inputnumber';
 import { ToggleButton } from 'primereact/togglebutton';
+import { Dialog } from 'primereact/dialog';
 // store
 import useStore from '../store/store';
 // styles
@@ -25,12 +26,10 @@ const _clearGrids = (map: L.Map) => {
 };
 
 const _preparePolygon = (feature: L.Polygon) => {
-  console.log('_preparePolygon');
   const features = [];
 
   // extract geojson
   const geoJSON = feature.toGeoJSON();
-  console.log('geoJSON', geoJSON);
 
   // convert to turf polygon
   const coords = geoJSON.geometry.coordinates;
@@ -78,6 +77,29 @@ const _getGridSizeInDegrees = (lat: number, gridSizeKm: number) => {
   return { gridW: lonStep, gridH: latStep };
 };
 
+const _calculateNumberOfGrids = (
+  geomanFeatures: (Feature<Polygon, GeoJsonProperties> | undefined)[],
+  gridSize: number,
+) => {
+  const areaInSquareMeters = geomanFeatures.reduce(
+    (areaSum: number, feature) => {
+      const area = turf.area(feature as Feature<Polygon>);
+      return areaSum + area; // Add the area of the polygon
+    },
+    0,
+  );
+  const areaInSquareKilometers = areaInSquareMeters / 1_000_000;
+  // console.log('areaInSquareKilometers', areaInSquareKilometers);
+
+  const gridInSquareKilometers = gridSize ** 2;
+  // console.log('gridInSquareKilometers', gridInSquareKilometers);
+
+  const numberOfGridsNeeded = areaInSquareKilometers / gridInSquareKilometers;
+  // console.log('numberOfGridsNeeded', numberOfGridsNeeded);
+
+  return numberOfGridsNeeded;
+};
+
 const GridGenerator = () => {
   // global state
   const map = useStore((state) => state.map);
@@ -86,10 +108,12 @@ const GridGenerator = () => {
   const [gridSize, setGridSize] = useState(10);
   const [gridStep, setGridStep] = useState(1);
   const [gridClip, setGridClip] = useState(true);
+  const [showGridWarning, setShowGridWarning] = useState(false);
+  const [gridStateGeomanData, setGridStateGeomanData] = useState<
+    (Feature<Polygon, GeoJsonProperties> | undefined)[]
+  >([]);
 
   const onGenerate = () => {
-    console.log('onGenerate');
-
     if (!map) {
       return;
     }
@@ -117,15 +141,72 @@ const GridGenerator = () => {
       }
     });
 
-    console.log('geomanFeatures', geomanFeatures);
+    // perform grid number check before calling rectangleGrid()
+    const approxNumberOfGrids = _calculateNumberOfGrids(
+      geomanFeatures,
+      gridSize,
+    );
+    if (approxNumberOfGrids > 5000) {
+      setGridStateGeomanData(geomanFeatures); // tmp save
+      setShowGridWarning(true);
+    } else {
+      createAndDisplayGrid(geomanFeatures);
+    }
+  };
+
+  const onClear = () => {
+    if (map) {
+      _clearGrids(map);
+    }
+  };
+
+  const onGridSizeChange = (newValue: any) => {
+    let newGridStep = gridStep;
+    let newGridSize =
+      newValue >= 1 ? Math.floor(newValue + Number.EPSILON) : newValue;
+    if (newGridSize < 1 && gridSize >= 1) {
+      newGridSize = 0.9; // tmp
+      newGridStep = 0.1;
+    } else if (newGridSize < 1 && gridSize < 1) {
+      newGridStep = 0.1;
+    } else if (newGridSize >= 1 && gridSize < 1) {
+      newGridStep = 1.0;
+    } else if (newGridSize >= 1 && gridSize >= 1) {
+      newGridStep = 1.0;
+    }
+    // console.log('set grid size:', newGridSize);
+    setGridSize(newGridSize);
+    setGridStep(newGridStep);
+  };
+
+  const handleShowGridConfirm = () => {
+    setShowGridWarning(false);
+    createAndDisplayGrid();
+  };
+
+  const handleShowGridCancel = () => {
+    setShowGridWarning(false);
+  };
+
+  const createAndDisplayGrid = (
+    geomanData:
+      | (Feature<Polygon, GeoJsonProperties> | undefined)[]
+      | null = null,
+  ) => {
+    if (!map) {
+      return;
+    }
+    // which data to display?
+    const geomanFeatures = geomanData ? geomanData : gridStateGeomanData;
 
     // now we have a list of features in turf format
+    const gridGeoJsonFeatures: L.GeoJSON[] = [];
+
     geomanFeatures.forEach((feature) => {
       // ignore if feature is undefined
       if (!feature) {
         return;
       }
-      console.log(geomanFeatures);
 
       // get the centroid
       const centroid = turf.centroid(feature);
@@ -141,9 +222,9 @@ const GridGenerator = () => {
       // create a polygon from bbox
       const gridPolygon = turf.bboxPolygon(bbox);
       // scale the polygon up
-      const grodPolygonScaled = turf.transformScale(gridPolygon, 1.5);
+      const gridPolygonScaled = turf.transformScale(gridPolygon, 1.5);
       // create a bbox form the scaled up polygon
-      const bboxScaled = turf.bbox(grodPolygonScaled);
+      const bboxScaled = turf.bbox(gridPolygonScaled);
 
       // now create the actual grid form the scaled up polygon
       // and mask it with the actual source feature
@@ -168,33 +249,20 @@ const GridGenerator = () => {
         });
         grid = turf.featureCollection(clippedGridFeatures);
       }
-      L.geoJSON(grid, { pane: 'grids', style: { color: 'red' } }).addTo(map);
+
+      // L.geoJSON(grid, { pane: 'grids', style: { color: 'red' } }).addTo(map);
+      const gridGeoJson = L.geoJSON(grid, {
+        pane: 'grids',
+        style: { color: 'green' },
+      });
+      gridGeoJsonFeatures.push(gridGeoJson);
     });
-  };
 
-  const onClear = () => {
-    if (map) {
-      _clearGrids(map);
+    if (gridGeoJsonFeatures.length > 0) {
+      gridGeoJsonFeatures.forEach((gridGeoJSON) => {
+        gridGeoJSON.addTo(map);
+      });
     }
-  };
-
-  const onGridSizeChange = (newValue: any) => {
-    let newGridStep = gridStep;
-    let newGridSize =
-      newValue >= 1 ? Math.floor(newValue + Number.EPSILON) : newValue;
-    if (newGridSize < 1 && gridSize >= 1) {
-      newGridSize = 0.9; // tmp
-      newGridStep = 0.1;
-    } else if (newGridSize < 1 && gridSize < 1) {
-      newGridStep = 0.1;
-    } else if (newGridSize >= 1 && gridSize < 1) {
-      newGridStep = 1.0;
-    } else if (newGridSize >= 1 && gridSize >= 1) {
-      newGridStep = 1.0;
-    }
-    console.log('set grid size:', newGridSize);
-    setGridSize(newGridSize);
-    setGridStep(newGridStep);
   };
 
   return (
@@ -241,6 +309,29 @@ const GridGenerator = () => {
         // loading={true}
         severity="danger"
       />
+
+      <Dialog
+        header="Confirmation"
+        visible={showGridWarning}
+        onHide={handleShowGridCancel}
+        footer={
+          <div>
+            <Button
+              label="No"
+              onClick={handleShowGridCancel}
+              className="p-button-text"
+            />
+            <Button label="Yes" onClick={handleShowGridConfirm} autoFocus />
+          </div>
+        }
+      >
+        <p>
+          The set grid size would roughly result in over 5000 individual grid
+          squares.
+        </p>
+        <p>This could cause your browser to crash or slow down!</p>
+        <p>Are you sure you want to continue?</p>
+      </Dialog>
     </div>
   );
 };
