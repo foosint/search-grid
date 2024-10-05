@@ -11,4 +11,5 @@ export default defineConfig({
       },
     },
   },
+  base: '/search-grid/', // Replace <repository> with your repo name
 });
