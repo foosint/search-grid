@@ -25,3 +25,6 @@ dist-ssr
 
 # TypeScript build info files
 *.tsbuildinfo
+
+# TMP DEV
+public/presets

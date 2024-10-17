@@ -21,7 +21,7 @@ const Map = () => {
     })),
   );
 
-  console.log('RENDER MAP');
+  // console.log('RENDER MAP');
 
   return (
     <MapContainer
@@ -47,6 +47,7 @@ const Map = () => {
       <MapSelectCustom />
       {/* <MapPreselector /> */}
       <Pane name="tmp" />
+      <Pane name="uploads" />
       <Pane name="grids" />
     </MapContainer>
   );

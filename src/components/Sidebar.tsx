@@ -3,11 +3,13 @@
 // import Preselector from './Preselector';
 import Download from './Download';
 import GridGenerator from './GridGenerator';
+import Upload from './Upload';
+import { Divider } from 'primereact/divider';
 // styles
 import '../styles/sidebar.scss';
 
 const Sidebar = () => {
-  console.log('RENDER SIDEBAR');
+  // console.log('RENDER SIDEBAR');
 
   return (
     <aside className="sidebar" id="sidebar">
@@ -15,6 +17,9 @@ const Sidebar = () => {
         {/* <SelectModeSelector /> */}
         {/* <Preselector /> */}
         <GridGenerator />
+        <Divider />
+        <Upload />
+        <Divider />
         <Download />
       </div>
     </aside>

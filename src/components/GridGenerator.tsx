@@ -10,7 +10,7 @@ import { Dialog } from 'primereact/dialog';
 // store
 import useStore from '../store/store';
 // styles
-import '../styles/grid.scss';
+// import '../styles/grid.scss';
 
 const _clearGrids = (map: L.Map) => {
   const panesToClear = ['tmp', 'grids'];
@@ -25,16 +25,26 @@ const _clearGrids = (map: L.Map) => {
   });
 };
 
-const _preparePolygon = (feature: L.Polygon) => {
+// Function to remove duplicate vertices within each ring
+function _removeDuplicateVertices(coords) {
+  const newCoords = coords.map((ring) => {
+    // Filter out consecutive duplicate points, except for the first and last point
+    return ring.filter((coord, index: number, arr) => {
+      // Keep the first point, the last point, and remove consecutive duplicates
+      return (
+        index === 0 ||
+        index === arr.length - 1 ||
+        coord[0] !== arr[index - 1][0] ||
+        coord[1] !== arr[index - 1][1]
+      );
+    });
+  });
+
+  return newCoords;
+}
+
+const turfPolygon2Features = (polygon: Feature<Polygon, GeoJsonProperties>) => {
   const features = [];
-
-  // extract geojson
-  const geoJSON = feature.toGeoJSON();
-
-  // convert to turf polygon
-  const coords = geoJSON.geometry.coordinates;
-  const polygon = turf.polygon(coords as Position[][]);
-
   // check for kinks and unkink the polygon if needed
   const kinks = turf.kinks(polygon);
   if (kinks.features.length > 0) {
@@ -47,8 +57,47 @@ const _preparePolygon = (feature: L.Polygon) => {
   } else {
     features.push(polygon);
   }
-
   return features;
+};
+
+const _prepareMultiPolygon = (feature: L.Polygon, map: L.Map) => {
+  const allFeatures: Feature<Polygon, GeoJsonProperties>[] = [];
+
+  // extract geojson
+  const geoJSON = feature.toGeoJSON();
+
+  // convert to turf polygon
+  const allCoords = geoJSON.geometry.coordinates;
+  // console.log(allCoords);
+
+  allCoords.forEach((coords) => {
+    // remove duplicate coords (except first & last)
+    const fixedCoords = _removeDuplicateVertices(coords);
+    const polygon = turf.polygon([fixedCoords] as Position[][]);
+    // L.geoJSON(polygon, { pane: 'grids', style: { color: 'red' } }).addTo(map);
+    const features = turfPolygon2Features(polygon);
+    // console.log(features);
+    features.forEach((feature) => {
+      allFeatures.push(feature);
+    });
+  });
+
+  return allFeatures;
+};
+
+const _preparePolygon = (feature: L.Polygon, map: L.Map) => {
+  // extract geojson
+  const geoJSON = feature.toGeoJSON();
+
+  // convert to turf polygon
+  const coords = geoJSON.geometry.coordinates;
+  // remove duplicate coords (except first & last)
+  const fixedCoords = _removeDuplicateVertices(coords);
+
+  const polygon = turf.polygon(fixedCoords as Position[][]);
+  // L.geoJSON(polygon, { pane: 'grids', style: { color: 'red' } }).addTo(map);
+
+  return turfPolygon2Features(polygon);
 };
 
 const _prepareCircle = (feature: L.Circle) => {
@@ -133,8 +182,19 @@ const GridGenerator = () => {
       layer.pm.disable();
 
       if (layer instanceof L.Polygon) {
-        const polygonFeatures = _preparePolygon(layer);
-        return polygonFeatures.map((feature) => feature);
+        if (
+          layer &&
+          layer.feature &&
+          layer.feature.geometry &&
+          layer.feature.geometry.coordinates &&
+          layer.feature.geometry.coordinates.length > 1
+        ) {
+          const polygonFeatures = _prepareMultiPolygon(layer, map);
+          return polygonFeatures.map((feature) => feature);
+        } else {
+          const polygonFeatures = _preparePolygon(layer, map);
+          return polygonFeatures.map((feature) => feature);
+        }
       } else if (layer instanceof L.Circle) {
         const circleFeature = _prepareCircle(layer);
         return circleFeature;
@@ -270,7 +330,6 @@ const GridGenerator = () => {
       <Button
         label="Generate Grid"
         icon="pi pi-sync"
-        iconPos="right"
         size="small"
         onClick={onGenerate}
         severity="success"
@@ -291,24 +350,24 @@ const GridGenerator = () => {
         suffix=" km"
         maxFractionDigits={1}
       />
-      {/* <InputSwitch checked={gridClip} onChange={(e) => setGridClip(e.value)} /> */}
-      <ToggleButton
-        checked={gridClip}
-        onLabel="Clip Grid: On"
-        offLabel="Clip Grid: Off"
-        onIcon="pi pi-chevron-circle-down"
-        offIcon="pi pi-times-circle"
-        onChange={(e) => setGridClip(e.value)}
-      />
-      <Button
-        label="Clear Grid"
-        icon="pi pi-sync"
-        iconPos="right"
-        size="small"
-        onClick={onClear}
-        // loading={true}
-        severity="danger"
-      />
+      <div className="row">
+        <ToggleButton
+          checked={gridClip}
+          onLabel="Clip"
+          offLabel="Clip"
+          // onIcon="pi pi-chevron-circle-down"
+          // offIcon="pi pi-times-circle"
+          onChange={(e) => setGridClip(e.value)}
+        />
+        <Button
+          label="Clear"
+          // icon="pi pi-eraser"
+          size="small"
+          onClick={onClear}
+          // loading={true}
+          severity="danger"
+        />
+      </div>
 
       <Dialog
         header="Confirmation"

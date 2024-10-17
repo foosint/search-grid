@@ -16,11 +16,48 @@
   height: 100%;
 }
 
-.sidebar.minimized {
-  flex: 0 0 60px; /* Minimized width */
+/* Button Style */
+.p-button {
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 13px;
+  padding: 0.65625rem 1.09375rem;
 }
-
-/* Hide the sidebar content when minimized */
-.sidebar.minimized .sidebar-content {
-  display: none;
+.p-togglebutton {
+  width: 100%;
+}
+.p-inputnumber-button {
+  width: auto;
+}
+.p-inputnumber {
+  .p-button {
+    padding: 0.25em;
+  }
+  .p-inputtext {
+    // min-width: 1px;
+    font-size: 13px;
+    padding: 0.65625rem 1.09375rem;
+  }
+}
+.p-inputnumber-input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  .p-button,
+  .p-togglebutton,
+  .p-fileupload {
+    width: 48%;
+  }
+  .p-fileupload {
+    .p-button {
+      width: 100%;
+      .p-icon {
+        display: none;
+      }
+    }
+  }
 }

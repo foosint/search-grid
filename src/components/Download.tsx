@@ -3,7 +3,7 @@ import * as L from 'leaflet';
 // primereact
 import { Button } from 'primereact/button';
 // styles
-import '../styles/download.scss';
+// import '../styles/download.scss';
 // types
 import { Feature, FeatureCollection } from 'geojson';
 
@@ -116,7 +116,6 @@ const Download = () => {
       <Button
         label="Download .kml"
         icon="pi pi-download"
-        iconPos="right"
         size="small"
         onClick={onClick}
       />

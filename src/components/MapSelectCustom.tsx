@@ -25,7 +25,7 @@ const MapSelectCustom = () => {
     return null;
   }
 
-  console.log('RENDER MapSelectRectangle');
+  // console.log('RENDER MapSelectRectangle');
   L.PM.setOptIn(false);
   map.pm.addControls({
     position: 'topleft',

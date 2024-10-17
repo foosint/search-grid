@@ -22,8 +22,8 @@ const SelectModeSelector = () => {
     setSelectMode(newSelectMode);
   };
 
-  console.log('RENDER SELECTMODESELECTOR');
-  console.log(selectMode);
+  // console.log('RENDER SELECTMODESELECTOR');
+  // console.log(selectMode);
 
   return (
     <div className="select-mode">

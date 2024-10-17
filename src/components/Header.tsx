@@ -2,11 +2,11 @@
 import '../styles/header.scss';
 
 const Header = () => {
-  console.log('RENDER HEADER');
+  // console.log('RENDER HEADER');
 
   return (
     <header className="header">
-      <h1>Grid Generator</h1>
+      <h1>Search Grid Generator</h1>
       <a
         href="https://github.com/foosint/search-grid"
         target="_blank"

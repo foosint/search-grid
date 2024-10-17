@@ -39,7 +39,7 @@ const Preselector = () => {
     setPreselectRegion(newRegion);
   };
 
-  console.log('RENDER PRESELECTOR');
+  // console.log('RENDER PRESELECTOR');
 
   return (
     <div className="preselector">
